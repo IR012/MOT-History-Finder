@@ -1,0 +1,61 @@
+﻿@page "/"
+@inject IMotHistoryService service
+
+<h3>Search MOT History</h3>
+
+<EditForm Model="@_vehichleRegistration" OnSubmit="@OnSearchClick">
+    <InputText id="registrationText" @bind-Value=@_vehichleRegistration />
+    <button type="submit">Search</button>
+</EditForm>
+
+@if (motHistory != null && String.IsNullOrEmpty(Error))
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Make</th>
+                <th scope="col">Model</th>
+                <th scope="col">Colour</th>
+                <th scope="col">MOT Expiry Date</th>
+                <th scope="col">Mileage at last MOT</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <th scope="row">@motHistory.make</th>
+                <th scope="row">@motHistory.model</th>
+                <th scope="row">@motHistory.primaryColour</th>
+                <th scope="row">@motHistory.motTests[0].expiryDate</th>
+                <th scope="row">@motHistory.motTests[0].odometerValue
+                    <span>@motHistory.motTests[0].odometerUnit</span>
+                </th>
+            </tr>
+        </tbody>
+    </table>
+}
+
+@if (!String.IsNullOrEmpty(Error))
+{
+    <div>@Error</div>
+}
+
+@code {
+    private string _vehichleRegistration = string.Empty;
+    public MotHistoryDto motHistory { get; set; }
+    public string Error { get; set; }
+
+    public async void OnSearchClick()
+    {
+        Error = String.Empty;
+        try
+        {
+            _vehichleRegistration = _vehichleRegistration.Replace(" ", "");
+            motHistory = (await service.GetMotHistory(_vehichleRegistration)).FirstOrDefault();
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        StateHasChanged();
+    }
+}
